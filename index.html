@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Typing Practice</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <audio id="bg-music"
+        src="sound/desifreemusic-gentle-romantic-piano-instrumental-royalty-free-music-397373.mp3"
+        loop></audio>
+
+    <div class="app-shell" id="setup-view">
+        <div class="setup-screen">
+            <h2 style="color: var(--accent);">Keyboard Selection</h2>
+            <p style="color: var(--text-sub); margin-bottom: 10px;">
+                Choose keys to practice (Windows/Caps excluded)
+            </p>
+
+            <div class="key-grid" id="kb-container"></div>
+
+            <div style="display:flex; gap:10px; justify-content:center; margin-bottom: 20px;">
+                <button class="btn-sm" onclick="selectAll()">Select All</button>
+                <button class="btn-sm" onclick="clearAll()">Clear All</button>
+            </div>
+
+            <button class="start-btn" onclick="startPractice()">
+                Start Practice
+            </button>
+        </div>
+    </div>
+
+    <div class="app-shell hidden" id="practice-view">
+
+        <div class="dashboard">
+
+            <div class="stat-box">
+                <div class="stat-label">WPM</div>
+                <div id="wpm" class="stat-val">0</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div id="acc" class="stat-val">100%</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Time</div>
+                <div id="timer" class="stat-val">0s</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Progress</div>
+                <div id="prog" class="stat-val">0%</div>
+            </div>
+
+        </div>
+
+        <div class="practice-area" onclick="focusInput()">
+            <div id="text-display"></div>
+
+            <input type="text"
+                id="hidden-input"
+                autocomplete="off"
+                spellcheck="false">
+        </div>
+
+        <div style="display:flex; justify-content: space-between; align-items:center;">
+
+            <div style="display:flex; gap:10px;">
+                <button id="btn-music"
+                    class="btn-sm"
+                    onclick="toggleMusic()">
+
+                    🎵 Music: Off
+                </button>
+
+                <button id="btn-buzzer"
+                    class="btn-sm"
+                    style="background:var(--accent); color:white;"
+                    onclick="toggleBuzzer()">
+
+                    🔔 Buzzer: On
+                </button>
+            </div>
+
+            <button class="btn-sm" onclick="location.reload()">
+                ↺ Reset
+            </button>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
