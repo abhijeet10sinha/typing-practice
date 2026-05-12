@@ -11,11 +11,13 @@ let selectedKeys = new Set(['a', 's', 'd', 'f', 'j', 'k', 'l', ';']);
 let fullText = "";
 let charIdx = 0;
 let startTime = null;
+let timerInterval = null;
 let errors = 0;
 let totalTyped = 0;
 let audioCtx = null;
 let isMusicOn = false;
 let isBuzzerOn = true;
+let isKeyboardSoundOn = true;
 
 function initKeyboard() {
     const container = document.getElementById('kb-container');
@@ -76,22 +78,120 @@ function clearAll() {
     });
 }
 
+const WORD_BANK = [
+    // Home row / small combinations
+    "a", "as", "ask", "asks", "sad", "dad", "lad", "lass", "fall", "falls",
+    "flask", "salad", "all", "add", "adds", "ads", "afar", "alas",
+
+    // Common short words
+    "am", "an", "and", "any", "are", "arm", "art", "at", "ate", "bad",
+    "bag", "bar", "bat", "be", "bed", "bee", "big", "bin", "bit", "boy",
+    "bus", "but", "buy", "by", "can", "cap", "car", "cat", "cow", "cry",
+    "cup", "cut", "day", "did", "die", "dig", "dog", "dry", "ear", "eat",
+    "egg", "end", "far", "fat", "few", "fit", "fix", "fly", "for", "fox",
+    "fun", "get", "go", "got", "gun", "had", "has", "hat", "he", "her",
+    "him", "his", "hit", "hot", "how", "ice", "if", "in", "is", "it",
+    "job", "joy", "key", "kid", "lab", "law", "lay", "leg", "let", "lie",
+    "log", "lot", "low", "mad", "man", "map", "may", "men", "mix", "mom",
+    "mud", "net", "new", "no", "not", "now", "off", "old", "on", "one",
+    "or", "our", "out", "own", "pay", "pen", "pet", "put", "red", "run",
+    "sad", "say", "sea", "see", "set", "she", "sit", "six", "sky", "son",
+    "sun", "ten", "the", "too", "top", "toy", "try", "two", "use", "war",
+    "was", "way", "we", "wet", "who", "why", "win", "yes", "yet", "you",
+
+    // Common medium words
+    "able", "about", "above", "after", "again", "air", "also", "always",
+    "animal", "answer", "apple", "area", "around", "baby", "back", "ball",
+    "bank", "base", "bear", "beat", "best", "bird", "blue", "boat", "body",
+    "book", "born", "both", "bring", "build", "cake", "call", "came",
+    "card", "care", "case", "city", "class", "clean", "clear", "close",
+    "cold", "come", "cook", "cool", "copy", "cost", "data", "date",
+    "deep", "desk", "done", "door", "down", "draw", "dream", "drink",
+    "drive", "each", "early", "easy", "else", "even", "ever", "every",
+    "face", "fact", "fair", "fall", "family", "fast", "feel", "file",
+    "fill", "find", "fine", "fire", "first", "fish", "five", "food",
+    "foot", "form", "free", "friend", "full", "game", "gave", "girl",
+    "give", "glass", "goes", "gold", "good", "great", "green", "group",
+    "grow", "hand", "hard", "have", "head", "hear", "heart", "help",
+    "here", "high", "home", "hope", "hour", "house", "idea", "keep",
+    "kind", "king", "know", "land", "large", "last", "late", "learn",
+    "left", "less", "life", "light", "like", "line", "list", "live",
+    "long", "look", "lost", "love", "made", "main", "make", "many",
+    "mark", "mean", "mind", "miss", "money", "month", "moon", "more",
+    "morning", "most", "move", "much", "must", "name", "near", "need",
+    "never", "next", "nice", "night", "note", "open", "page", "park",
+    "part", "pass", "past", "path", "place", "plan", "play", "point",
+    "power", "price", "problem", "pull", "push", "rain", "read", "real",
+    "right", "ring", "rise", "road", "room", "rule", "same", "save",
+    "school", "second", "seem", "self", "sell", "send", "short", "show",
+    "side", "simple", "sing", "slow", "small", "snow", "soft", "some",
+    "soon", "sound", "space", "stand", "start", "stay", "step", "still",
+    "stop", "story", "study", "sure", "table", "take", "talk", "team",
+    "tell", "than", "thank", "that", "their", "them", "then", "there",
+    "these", "thing", "think", "this", "those", "three", "time", "today",
+    "together", "took", "tree", "true", "turn", "type", "under", "until",
+    "upon", "very", "voice", "wait", "walk", "wall", "want", "warm",
+    "watch", "water", "week", "well", "went", "were", "what", "when",
+    "where", "white", "will", "wind", "word", "work", "world", "write",
+    "wrong", "year", "young",
+
+    // Typing / keyboard words
+    "type", "typing", "practice", "speed", "accuracy", "keyboard", "key",
+    "keys", "finger", "fingers", "press", "space", "shift", "enter",
+    "input", "text", "letter", "letters", "word", "words", "line",
+    "correct", "wrong", "mistake", "focus", "timer", "score",
+
+    // Data / coding / career words
+    "code", "coding", "script", "javascript", "html", "css", "python",
+    "data", "science", "analyst", "analysis", "table", "chart", "graph",
+    "query", "sql", "power", "powerbi", "dashboard", "report", "project",
+    "file", "folder", "github", "portfolio", "price", "area", "sales",
+    "profit", "revenue", "market", "business", "client", "email", "call",
+    "chat", "support", "career", "resume", "skill", "skills",
+
+    // Longer common words
+    "beautiful", "because", "between", "business", "children", "complete",
+    "computer", "country", "different", "important", "interest", "language",
+    "learning", "machine", "morning", "personal", "possible", "practice",
+    "question", "remember", "sentence", "something", "together", "training",
+    "understand", "website", "without", "working",
+
+    "a", "as", "ask", "asks", "sad", "dad", "lad", "lass", "fall", "falls",
+
+    // Semicolon practice
+    "ask;", "sad;", "dad;", "lad;", "fall;", "falls;", "class;", "glass;",
+    "all;", "add;", "data;", "code;", "type;", "word;", "line;", "file;",
+    "if;", "else;", "for;", "while;", "return;", "print;", "input;",
+
+    "the", "there", "their", "then", "this", "that"
+];
+
+function canTypeWord(word, allowedKeys) {
+    return word.split('').every(char => allowedKeys.has(char));
+}
+
 function generateText() {
-    const pool = Array.from(selectedKeys).map(k => k === 'Space' ? ' ' : k);
+    const allowedKeys = new Set(
+        Array.from(selectedKeys)
+            .map(k => k.toLowerCase())
+            .filter(k => k.length === 1)
+    );
 
-    let str = "";
+    let availableWords = WORD_BANK.filter(word => canTypeWord(word, allowedKeys));
 
-    for (let i = 0; i < 60; i++) {
-        let chunkLen = Math.floor(Math.random() * 4) + 2;
-
-        for (let j = 0; j < chunkLen; j++) {
-            str += pool[Math.floor(Math.random() * pool.length)];
-        }
-
-        str += " ";
+    if (availableWords.length < 5) {
+        alert("Not enough meaningful words found for selected keys. Please select more alphabets.");
+        return;
     }
 
-    fullText = str.replace(/\s\s+/g, ' ').trim();
+    let words = [];
+
+    for (let i = 0; i < 60; i++) {
+        const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+        words.push(randomWord);
+    }
+
+    fullText = words.join(" ");
 }
 
 function startPractice() {
@@ -153,6 +253,15 @@ function playBuzzer() {
     osc.stop(audioCtx.currentTime + 0.2);
 }
 
+function playKeyboardSound() {
+    if (!isKeyboardSoundOn) return;
+
+    const clickSound = new Audio("sound/single-key-press.mp3");
+    clickSound.volume = 0.35;
+    clickSound.currentTime = 0;
+    clickSound.play();
+}
+
 function render() {
     const display = document.getElementById('text-display');
 
@@ -176,15 +285,25 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
 
     if (!startTime) {
         startTime = Date.now();
-        setInterval(updateStats, 200);
+        timerInterval = setInterval(updateStats, 200);
     }
 
     const char = e.target.value.slice(-1);
+
+    playKeyboardSound();
 
     totalTyped++;
 
     if (char === fullText[charIdx]) {
         charIdx++;
+
+        if (charIdx >= fullText.length) {
+            clearInterval(timerInterval);
+            updateStats();
+            document.getElementById('hidden-input').blur();
+            alert("Typing completed!");
+        }
+
     } else {
         errors++;
         playBuzzer();
